@@ -4,40 +4,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 描述：
-/// 功能：
-/// 作者：yoyohan
-/// 创建时间：2019-08-17 11:03:21
-/// </summary>
-public class EveryImg : CellGridBase
+
+namespace yoyohan.ScrollViewToolDemo
 {
-    public RawImage titleImage;
-    public Texture2D defaultTexture;
-    private NetImageRequestObj requestObj;
-
-    public override void RefreshCellView()
+    /// <summary>
+    /// 描述：
+    /// 功能：
+    /// 作者：yoyohan
+    /// 创建时间：2019-08-17 11:03:21
+    /// </summary>
+    public class EveryImg : CellGridBase
     {
-        if (active == false)
-            return;
+        public RawImage titleImage;
+        public Texture2D defaultTexture;
+        private NetImageRequestObj requestObj;
 
-        if (requestObj!=null)
+        public override void RefreshCellGrid()
         {
-            requestObj.Abort();
+            base.RefreshCellGrid();
+
+            if (mActive == false)
+                return;
+
+            if (requestObj != null)
+            {
+                requestObj.Abort();
+            }
+
+            requestObj = null;
+            string path = mData.toOtherType<ImgCellData>().imgPath;
+            titleImage.texture = defaultTexture;
+
+            requestObj = NetImageMgr.getInstance().StartGetOne(path, titleImage, 1);
         }
 
-        requestObj = null;
-        string path = mData.toOtherType<ImgCellData>().imgPath;
-        titleImage.texture = defaultTexture;
-        
-        requestObj = NetImageMgr.getInstance().StartGetOne(path, titleImage, 1);
-    }
+        public void onDeleteBtnClick()
+        {
+            mScrollerCtrl.RemoveAtID(mDataIndex);
+            mScrollerCtrl.ReloadData(mScrollerCtrl.scroller.NormalizedScrollPosition);
+        }
 
-    public void onDeleteBtnClick()
-    {
-        scrollerCtrl.RemoveAtID(mDataIndex);
-        scrollerCtrl.ReloadData(scrollerCtrl.scroller.NormalizedScrollPosition);
     }
-
 }
-

@@ -1,33 +1,51 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 描述：
-/// 功能：
-/// 作者：yoyohan
-/// 创建时间：2019-08-17 11:03:21
-/// </summary>
-public class BtnCellView : CellViewBase
+namespace yoyohan.ScrollViewToolDemo
 {
-    public Text titleText;
-
-    public BtnCellData mBtnCellData
+    /// <summary>
+    /// 描述：
+    /// 功能：
+    /// 作者：yoyohan
+    /// 创建时间：2019-08-17 11:03:21
+    /// </summary>
+    public class BtnCellView : CellViewBase
     {
-        get
+        public static Action<BtnCellView> onCellViewRefersh;
+        public static Action<BtnCellView> onCellViewClick;
+        public Text titleText;
+
+        public BtnCellData mBtnCellData
         {
-            return mDataBase.toOtherType<BtnCellData>();
+            get
+            {
+                return mData.toOtherType<BtnCellData>();
+            }
         }
+
+
+        public override void RefreshCellView()
+        {
+            base.RefreshCellView();
+
+            if (onCellViewRefersh != null)
+                onCellViewRefersh(this);
+            if (!active)
+                return;
+
+            titleText.text = mBtnCellData.pathRoot;
+        }
+
+        public void OnBtnClick()
+        {
+            if (onCellViewClick != null)
+                onCellViewClick(this);
+        }
+
+
     }
-
-
-    public override void RefreshCellView()
-    {
-        Debug.Log("RefreshCellView:"+ mBtnCellData.pathRoot);
-        titleText.text = mBtnCellData.pathRoot;
-    }
-
 }
-

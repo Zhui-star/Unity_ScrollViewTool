@@ -1,39 +1,45 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CellGridBase : MonoBehaviour
+namespace yoyohan
 {
-    private GameObject __mGameObject;
-    private Transform __mTransform;
-    public GameObject mGameObject { get { if (__mGameObject == null) __mGameObject = this.gameObject; return __mGameObject; } }
-    public Transform mTransform { get { if (__mTransform == null) __mTransform = this.transform; return __mTransform; } }
-
-    [HideInInspector]
-    public ScrollerCtrlBase scrollerCtrl;
-
-    public CellDataBase mData;
-
-    public int mDataIndex;
-
-    public bool active = false;
-
-    public void setScrollerCtrl(ScrollerCtrlBase ctrl)
+    public class CellGridBase : MonoBehaviour
     {
-        scrollerCtrl = ctrl;
-    }
+        private GameObject __mGameObject;
+        private Transform __mTransform;
+        public GameObject mGameObject { get { if (__mGameObject == null) __mGameObject = this.gameObject; return __mGameObject; } }
+        public Transform mTransform { get { if (__mTransform == null) __mTransform = this.transform; return __mTransform; } }
 
-    public virtual void setData(CellDataBase data, int dataIndex)
-    {
-        active = data != null;
-        mGameObject.SetActive(active);
+        [HideInInspector]
+        public ScrollerCtrlBase mScrollerCtrl;
+        [HideInInspector]
+        public CellViewBase mCellViewBase;
+        [HideInInspector]
+        public int mGridIndex;//处于cell下第几个格子的索引
 
-        mData = data;
-        mDataIndex = dataIndex;
-    }
+        public CellDataBase mData;
+        public int mDataIndex;//真data的索引
+        public bool mActive = false;
 
-    public virtual void RefreshCellView()
-    {
- 
+        public void InitGrid(ScrollerCtrlBase scrollerCtrl, CellViewBase cellViewBase, int gridIndex)
+        {
+            mScrollerCtrl = scrollerCtrl;
+            mCellViewBase = cellViewBase;
+            mGridIndex = gridIndex;
+        }
+
+        /// <summary>
+        /// 必须继承该类的代码
+        /// </summary>
+        public virtual void RefreshCellGrid()
+        {
+            mDataIndex = mCellViewBase.dataIndex * mScrollerCtrl.numberOfCellsPerRow + mGridIndex;
+            mData = mScrollerCtrl.GetDataByID(mDataIndex);
+            mActive = mCellViewBase.mActive ? mData != null : false;
+            mGameObject.SetActive(mActive);
+        }
+
     }
 }

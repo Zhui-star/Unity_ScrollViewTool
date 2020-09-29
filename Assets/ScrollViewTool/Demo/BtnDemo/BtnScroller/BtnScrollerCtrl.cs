@@ -1,79 +1,95 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using EnhancedUI.EnhancedScroller;
+using yoyohan.EnhancedUI.EnhancedScroller;
 using System;
 
-/// <summary>
-/// 描述：
-/// 功能：
-/// 作者：yoyohan
-/// 创建时间：2019-08-17 10:34:11
-/// </summary>
-public class BtnScrollerCtrl : ScrollerCtrlBase
+namespace yoyohan.ScrollViewToolDemo
 {
-    public Transform role;//按钮被点击的变换图片
-    private int curShowTuChe = -1;
-
-    public Action<BtnCellView> OnCellViewClick;
-
-    protected override void Start()
+    /// <summary>
+    /// 描述：
+    /// 功能：
+    /// 作者：yoyohan
+    /// 创建时间：2019-08-17 10:34:11
+    /// </summary>
+    public class BtnScrollerCtrl : ScrollerCtrlBase
     {
-        base.Start();
-        this.SetBtnDataList();
-    }
+        public Transform role;//按钮被点击的变换图片
+        private int curShowTuChe = -1;
 
-    public void SetBtnDataList()
-    {
-        List<CellDataBase> lisBtnCellData = new List<CellDataBase>();
-
-        for (int i = 0; i < 20; i++)
+        protected override void Start()
         {
-            lisBtnCellData.Add(new BtnCellData() { pathRoot = "path" + i });
+            base.Start();
+            this.SetBtnDataList();
         }
 
-        this.setDataList(lisBtnCellData);
-        this.ReloadData();
-
-        if (curShowTuChe == -1)
-            onCellViewClick((CellViewBase)this.scroller.GetCellViewAtDataIndex(0));
-    }
-
-    protected override void onCellViewClick(CellViewBase cellViewBase)
-    {
-        BtnCellView btnCellView = cellViewBase.toOtherType<BtnCellView>();
-
-        if (curShowTuChe != btnCellView.dataIndex)
+        public void SetBtnDataList()
         {
-            curShowTuChe = btnCellView.dataIndex;
-            SetRole(btnCellView.mTransform);
+            List<CellDataBase> lisBtnCellData = new List<CellDataBase>();
 
-            if (OnCellViewClick != null)
+            for (int i = 0; i < 20; i++)
             {
-                OnCellViewClick(btnCellView);
+                lisBtnCellData.Add(new BtnCellData() { pathRoot = "path" + i });
+            }
+
+            this.setDataList(lisBtnCellData);
+            this.ReloadData();
+
+            if (curShowTuChe == -1)
+            {
+                onCellViewClick((BtnCellView)this.scroller.GetCellViewAtDataIndex(0));
+                curShowTuChe = 0;
             }
         }
-    }
 
-    void SetRole(Transform transform)
-    {
-        role.gameObject.SetActive(true);
-        role.SetParent(transform, false);
-        role.SetAsFirstSibling();
-        role.localPosition = Vector3.zero;
-    }
-
-    public override void CellViewVisibilityChanged(EnhancedScrollerCellView cellView)
-    {
-        base.CellViewVisibilityChanged(cellView);
-
-        if (cellView.dataIndex == curShowTuChe)
+        void onCellViewClick(BtnCellView btnCellView)
         {
-            role.gameObject.SetActive(cellView.active);
-            if (cellView.active == true)
+            if (curShowTuChe != btnCellView.dataIndex)
             {
-                SetRole(cellView.transform);
+                curShowTuChe = btnCellView.dataIndex;
+                SetRole(btnCellView.mTransform);
             }
         }
+
+        void onCellViewRefersh(BtnCellView btnCellView)
+        {
+            Debug.Log("btnCellView.dataIndex :" + btnCellView.dataIndex + "   curShowTuChe:" + curShowTuChe + "  btnCellView.active:" + btnCellView.active);
+            if (btnCellView.dataIndex == curShowTuChe)
+            {
+                role.gameObject.SetActive(btnCellView.active);
+                if (btnCellView.active == true)
+                {
+                    SetRole(btnCellView.transform);
+                }
+            }
+        }
+
+
+        void SetRole(Transform transform)
+        {
+            role.gameObject.SetActive(true);
+            role.SetParent(transform, false);
+            role.SetAsFirstSibling();
+            role.localPosition = Vector3.zero;
+        }
+
+        public override void CellViewVisibilityChanged(EnhancedScrollerCellView cellView)
+        {
+            base.CellViewVisibilityChanged(cellView);
+        }
+
+
+        private void OnEnable()
+        {
+            BtnCellView.onCellViewRefersh += onCellViewRefersh;
+            BtnCellView.onCellViewClick += onCellViewClick;
+        }
+
+        private void OnDisable()
+        {
+            BtnCellView.onCellViewRefersh -= onCellViewRefersh;
+            BtnCellView.onCellViewClick -= onCellViewClick;
+        }
+
     }
 }

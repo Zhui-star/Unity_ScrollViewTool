@@ -1,205 +1,213 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using EnhancedUI.EnhancedScroller;
+using yoyohan.EnhancedUI.EnhancedScroller;
 
-/// <summary>
-/// 描述：
-/// 功能：
-/// 作者：yoyohan
-/// 创建时间：2019-08-17 10:37:01
-/// </summary>
-public class ScrollerCtrlBase : MonoBehaviour, IEnhancedScrollerDelegate
+
+namespace yoyohan
 {
-    public EnhancedScroller scroller;
-    public CellViewBase cellViewPrefab;
-
-    private float _cellSize = -1;
-    public float cellSize
+    /// <summary>
+    /// 描述：
+    /// 功能：
+    /// 作者：yoyohan
+    /// 创建时间：2019-08-17 10:37:01
+    /// </summary>
+    public class ScrollerCtrlBase : MonoBehaviour, IEnhancedScrollerDelegate
     {
-        get
+        public EnhancedScroller scroller;
+        public CellViewBase cellViewPrefab;
+
+        private float _cellSize = -1;
+        public float cellSize
         {
-            if (_cellSize == -1)
+            get
             {
-                RectTransform rect = cellViewPrefab.GetComponent<RectTransform>();
-                _cellSize = scroller.scrollDirection == EnhancedScroller.ScrollDirectionEnum.Vertical ? rect.sizeDelta.y : rect.sizeDelta.x;
+                if (_cellSize == -1)
+                {
+                    _cellSize = getCellSize(cellViewPrefab.transform);
+                }
+                return _cellSize;
             }
-            return _cellSize;
         }
-    }
 
-    private int _pageCount = -1;
-    /// <summary>
-    /// 一页包含几个格子 用于翻页
-    /// </summary>
-    public int pageCount
-    {
-        get
+        private int _pageCount = -1;
+        /// <summary>
+        /// 一页包含几个格子 用于翻页
+        /// </summary>
+        public int pageCount
         {
-            if (_pageCount == -1)
+            get
             {
-                _pageCount = scroller.scrollDirection == EnhancedScroller.ScrollDirectionEnum.Vertical ? (int)scroller.ScrollRectSize / (int)cellSize : (int)scroller.ScrollRectSize / (int)cellSize;
+                if (_pageCount == -1)
+                {
+                    _pageCount = scroller.scrollDirection == EnhancedScroller.ScrollDirectionEnum.Vertical ? (int)scroller.ScrollRectSize / (int)cellSize : (int)scroller.ScrollRectSize / (int)cellSize;
+                }
+                return _pageCount;
             }
-            return _pageCount;
         }
-    }
 
-    [Header("格子模式勾选")]
-    public bool isGridModel = false;
-    /// <summary>
-    /// 如果是格子模式 该值有用
-    /// </summary>
-    private int _numberOfCellsPerRow = -1;
-    private int numberOfCellsPerRow
-    {
-        get
+        [Tooltip("格子模式勾选")]
+        public bool isGridModel = false;
+        /// <summary>
+        /// 如果是格子模式 该值有用
+        /// </summary>
+        private int _numberOfCellsPerRow = -1;
+        public int numberOfCellsPerRow
         {
-            if (_numberOfCellsPerRow == -1)
+            get
             {
-                _numberOfCellsPerRow = cellViewPrefab.gridCount;
+                if (_numberOfCellsPerRow == -1)
+                {
+                    _numberOfCellsPerRow = cellViewPrefab.gridCount;
+                }
+                return _numberOfCellsPerRow;
             }
-            return _numberOfCellsPerRow;
         }
-    }
 
-    [Space(20)]
-    public List<CellDataBase> lisData;
+        [Space(20)]
+        public List<CellDataBase> lisData;
+
+        private bool isReloaded = false;
 
 
-    #region 数据相关操作
-    public List<CellDataBase> RemoveAtID(int id)
-    {
-        if (id >= 0 && id <= lisData.Count - 1)
+        #region 数据相关操作
+        public List<CellDataBase> RemoveAtID(int id)
         {
-            lisData.RemoveAt(id);
+            if (id >= 0 && id <= lisData.Count - 1)
+            {
+                lisData.RemoveAt(id);
+            }
+
+            return lisData;
         }
 
-        return lisData;
-    }
-
-    public CellDataBase GetDataByID(int id)
-    {
-        if (id >= 0 && id <= lisData.Count - 1)
+        public CellDataBase GetDataByID(int id)
         {
-            return lisData[id];
+            if (id >= 0 && id <= lisData.Count - 1)
+            {
+                return lisData[id];
+            }
+
+            return null;
         }
+        #endregion
 
-        return null;
-    }
-    #endregion
-
-    protected virtual void Start()
-    {
-        StartDisablePrefab();
-    }
-
-
-    private bool isInit = false;
-
-    private void InitCtrl()
-    {
-        scroller.Delegate = this;
-        scroller.cellViewVisibilityChanged = CellViewVisibilityChanged;
-        isInit = true;
-    }
-
-    /// <summary>
-    /// 提前把Prefab关闭
-    /// </summary>
-    public void StartDisablePrefab()
-    {
-        if (cellViewPrefab.gameObject != null)
-            cellViewPrefab.mGameObject.SetActive(false);
-    }
-
-    public ScrollerCtrlBase setDataList(List<CellDataBase> _lisData)
-    {
-        this.lisData = _lisData;
-        return this;
-    }
-
-    /// <summary>
-    /// Scroller的启动方法  注意：调用之前先setDataList
-    /// </summary>
-    public virtual ScrollerCtrlBase ReloadData(float scrollPositionFactor = 0)
-    {
-        if (isInit == false)
-            InitCtrl();
-
-        scroller.ReloadData(scrollPositionFactor);
-        return this;
-    }
-
-    public virtual ScrollerCtrlBase RefershData()
-    {
-        scroller.RefreshActiveCellViews();
-        return this;
-    }
-
-
-    public virtual EnhancedScrollerCellView GetCellView(EnhancedScroller scroller, int dataIndex, int cellIndex)
-    {
-        CellViewBase cellView = scroller.GetCellView(cellViewPrefab) as CellViewBase;
-        if (isGridModel == false)
+        protected float getCellSize(Transform tr)
         {
-            cellView.name = "Cell " + dataIndex.ToString();
-            cellView.setData(lisData[dataIndex]);
-            cellView.onCellViewClick = this.onCellViewClick;
+            RectTransform rect = tr as RectTransform;
+            return scroller.scrollDirection == EnhancedScroller.ScrollDirectionEnum.Vertical ? rect.sizeDelta.y : rect.sizeDelta.x;
         }
-        else
+
+
+        protected virtual void Start()
         {
-            cellView.name = "Cell " + (dataIndex * numberOfCellsPerRow).ToString() + " to " + ((dataIndex * numberOfCellsPerRow) + numberOfCellsPerRow - 1).ToString();
-            cellView.setData(ref lisData, dataIndex * numberOfCellsPerRow);
+            if (cellViewPrefab != null)
+                cellViewPrefab.mGameObject.SetActive(false);
         }
-        return cellView;
-    }
 
-    public virtual float GetCellViewSize(EnhancedScroller scroller, int dataIndex)
-    {
-        return cellSize;
-    }
 
-    public virtual int GetNumberOfCells(EnhancedScroller scroller)
-    {
-        if (isGridModel == false)
+        private bool isInit = false;
+
+        private void InitCtrl()
         {
-            return lisData.Count;
+            scroller.Delegate = this;
+            scroller.cellViewVisibilityChanged = CellViewVisibilityChanged;
+            isInit = true;
         }
-        else
+
+        public virtual ScrollerCtrlBase setDataList(List<CellDataBase> _lisData)
         {
-            return Mathf.CeilToInt((float)lisData.Count / (float)numberOfCellsPerRow);
+            this.lisData = _lisData;
+            return this;
         }
-    }
 
-    public virtual void CellViewVisibilityChanged(EnhancedScrollerCellView cellView)
-    {
-        CellViewBase view = cellView as CellViewBase;
+        /// <summary>
+        /// Scroller的启动方法  注意：调用之前先setDataList
+        /// </summary>
+        public virtual ScrollerCtrlBase ReloadData(float scrollPositionFactor = 0)
+        {
+            if (isInit == false)
+                InitCtrl();
 
-        if (cellView.active)
-            view.RefreshCellView();
-    }
+            scroller.ReloadData(scrollPositionFactor);
+            isReloaded = true;
+            return this;
+        }
 
-    /// <summary>
-    /// single模式 格子被点击 
-    /// </summary>
-    protected virtual void onCellViewClick(CellViewBase cellViewBase)
-    {
+        public virtual ScrollerCtrlBase RefershData()
+        {
+            if (isReloaded==false)
+            {
+                ReloadData();
+                return this;
+            }
+            scroller.RefreshActiveCellViews();
+            return this;
+        }
 
-    }
 
-    public void OnUpButtonClick()
-    {
-        if (scroller.IsTweening == true)
-            return;
+        public virtual EnhancedScrollerCellView GetCellView(EnhancedScroller scroller, int dataIndex, int cellIndex)
+        {
+            int dataID = isGridModel ? dataIndex * numberOfCellsPerRow : dataIndex;
 
-        scroller.JumpToDataIndex(scroller.StartCellViewIndex - pageCount, 0, 0.05f, true, EnhancedScroller.TweenType.linear, 0.5f);
-    }
 
-    public void OnDownButtonClick()
-    {
-        if (scroller.IsTweening == true)
-            return;
+            CellViewBase cellView = scroller.GetCellView(cellViewPrefab) as CellViewBase;
+            if (isGridModel == false)
+            {
+                cellView.name = "Cell " + dataID;
+                cellView.setDataIndex(dataID);
+            }
+            else
+            {
+                cellView.name = "Cell " + dataID + " to " + (dataID + numberOfCellsPerRow - 1);
+                cellView.setDataIndex(dataID);
+            }
+            return cellView;
+        }
 
-        scroller.JumpToDataIndex(scroller.StartCellViewIndex + pageCount, 0, 0.05f, true, EnhancedScroller.TweenType.linear, 0.5f);
+        public virtual float GetCellViewSize(EnhancedScroller scroller, int dataIndex)
+        {
+            return cellSize;
+        }
+
+        public virtual int GetNumberOfCells(EnhancedScroller scroller)
+        {
+            if (isGridModel == false)
+            {
+                return lisData.Count;
+            }
+            else
+            {
+                return Mathf.CeilToInt((float)lisData.Count / (float)numberOfCellsPerRow);
+            }
+        }
+
+        public virtual void CellViewVisibilityChanged(EnhancedScrollerCellView cellView)
+        {
+            cellView.RefreshCellView();
+        }
+
+
+        public void OnUpButtonClick()
+        {
+            if (scroller.IsTweening == true)
+                return;
+
+            scroller.JumpToDataIndex(scroller.StartDataIndex - pageCount, 0, 0.05f, true, EnhancedScroller.TweenType.linear, 0.5f);
+        }
+
+        public void OnDownButtonClick()
+        {
+            if (scroller.IsTweening == true)
+                return;
+
+            scroller.JumpToDataIndex(scroller.StartDataIndex + pageCount, 0, 0.05f, true, EnhancedScroller.TweenType.linear, 0.5f);
+        }
+
+
+
+
+
+
     }
 }

@@ -1,19 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
-
 namespace yoyohan
 {
     /// <summary>
     /// 描述：
-    /// 功能：格子的基类
+    /// 功能：
     /// 作者：yoyohan
-    /// 创建时间：2019-05-25 13:52:16
+    /// 创建时间：2019-07-22 16:43:05
     /// </summary>
-    [Serializable]
-    public class CellDataBase
+    public class IESetImageMono : MonoBehaviour
     {
-        public int id;
+
+
     }
 }
